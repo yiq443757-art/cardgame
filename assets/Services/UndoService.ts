@@ -4,10 +4,12 @@ import { CardView } from '../Views/CardView';
 const { ccclass, property } = _decorator;
 
 // 只有一种类型：从 Playfield 移动到 Stack
+//可以在里面加入新的回退类型，比如stack到playfield
 enum UndoRecordType {
     PlayfieldToStack = 0,
 }
 
+//回退的牌记录的类型
 interface UndoPlayfieldToStackRecord {
     type: UndoRecordType.PlayfieldToStack;
     cardNode: Node;
@@ -21,7 +23,7 @@ type UndoRecord = UndoPlayfieldToStackRecord;
 @ccclass('UndoService')
 export class UndoService extends Component {
 
-    private _records: UndoRecord[] = [];
+    private _records: UndoRecord[] = [];//_records 就是一条条撤销记录组成的数组
 
     // ====== 1. 记录一次“桌面牌 → 手牌”动作 ======
     public recordMovePlayfieldToStack(cardView: CardView, playfieldArea: Node): void {
@@ -39,7 +41,8 @@ export class UndoService extends Component {
         };
 
         this._records.push(record);
-        // console.log('UndoService: 记录一条移动', record);
+        //计入这个record里面，然后在回退的时候使用
+        console.log('UndoService: 记录一条移动', record);
     }
 
     // ====== 2. UI按钮点击时调用这个函数 ======

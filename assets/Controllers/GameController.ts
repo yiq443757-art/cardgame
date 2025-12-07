@@ -9,41 +9,89 @@ import { PlayfieldController } from './PlayfieldController';
 const { ccclass, property } = _decorator;
 
 
+/*
+ GameController
+
+功能：
+负责本关卡中卡牌的整体生成与初始化；
+根据关卡配置（kLevel1Config）在 Playfield 和 Stack 区域实例化卡牌；
+负责为卡牌绑定点击事件，并将点击交给对应的 Controller（StackController / PlayfieldController）处理。
+ 
+职责：
+为游戏场景的“总调度”，协调视图层（GameView、CardView）与业务控制层（StackController、PlayfieldController）；
+管理关卡中卡牌节点的生成、父节点挂载以及初始坐标设置。
+ 
+使用场景：
+场景加载后，由 Cocos 生命周期自动调用 start()；
+在 start() 中初始化当前关卡的卡牌布局，并为其绑定交互逻辑。
+ */
 @ccclass('GameController')
 export class GameController extends Component {
 
     @property(Node)
     playfieldArea: Node | null = null;
-
+    /*
+    Playfield 区域根节点
+    用途：所有桌面上的牌（playfield 卡牌）都会作为子节点挂在此节点下。在编辑器中通过拖拽方式进行绑定。
+     */
     @property(Node)
     stackArea: Node | null = null;
-
+     /*
+    Stack 区域根节点
+    用途：所有堆牌区的牌（stack 卡牌）都会作为子节点挂在此节点下。在编辑器中通过拖拽方式进行绑定。
+     */
     @property([Prefab])
     playfieldCardPrefabs: Prefab[] = [];
-
+    /**
+    Playfield 区域使用的卡牌预制体数组
+    用途：根据关卡配置，在 playfieldArea 中实例化卡牌节点。
+     */
     @property([Prefab])
     stackCardPrefabs: Prefab[] = [];
-
+    /*
+    Stack 区域使用的卡牌预制体数组
+    用途：根据关卡配置，在 stackArea 中实例化堆牌区的卡牌。
+     */
     @property(GameView)
     gameView: GameView | null = null;
-
+    /*
+    GameView 视图层引用
+    用途：用于调用 GameView 中的动画或通用展示逻辑（例如：交换动画、替换动画等）。
+     */
     @property(StackController)
     stackController: StackController | null = null;
-
+     /*
+    StackController 控制器
+    用途：专门处理堆牌区 Stack 的点击逻辑与业务规则。
+     */
     @property(PlayfieldController)
     playfieldController: PlayfieldController | null = null;
-
+    /*
+    PlayfieldController 控制器
+    用途：专门处理桌面 Playfield 区域中的卡牌点击逻辑与业务规则。
+     */
 
     private readonly kDesignWidth = 1080;
     private readonly kDesignHeight = 2080;
+
     private _isSwappingStack = false;
+    /*
+    标记 Stack 区是否正在执行交换动画
+    用途：防止在交换过程中重复点击导致逻辑混乱。
+     */
 
     start() {
         this.spawnPlayfieldCards();
         this.spawnStackCards();
-        // ❌ 移除：不再使用全局查找绑定，避免层级问题
+        
          this.bindCardClicks(); 
     }
+    /*
+    Cocos 生命周期：start
+     功能：
+     在节点初始化完成后自动调用；根据关卡配置生成 Playfield 与 Stack 中的卡牌；
+     为所有已生成的卡牌绑定点击事件，将交互分发给对应的 Controller。
+     */
 
     private spawnPlayfieldCards(): void {
         if (!this.playfieldArea) return;
@@ -58,6 +106,13 @@ export class GameController extends Component {
             this.createCard(cfg, this.playfieldArea, prefab);
         }
     }
+    /*
+    生成 Playfield 区域的卡牌
+    功能：
+    遍历 kLevel1Config.playfield 配置；
+    使用 playfieldCardPrefabs 实例化卡牌；
+     将卡牌挂载到 playfieldArea 节点下。
+     */
 
     private spawnStackCards(): void {
         if (!this.stackArea) return;
@@ -72,8 +127,19 @@ export class GameController extends Component {
             this.createCard(cfg, this.stackArea, prefab);
         }
     }
+    /*
+    生成 Stack 区域的卡牌
+    功能：
+    遍历 kLevel1Config.stack 配置；
+    使用 stackCardPrefabs 实例化堆牌区的卡牌；
+    将卡牌挂载到 stackArea 节点下。
+    若编辑器中未配置 stackCardPrefabs，则会打印错误日志并提前返回。
+     */
 
-    // ✅ 关键修改：在创建卡牌时立即绑定点击回调
+    // 关键修改：在创建卡牌时立即绑定点击回调
+
+
+
     private createCard(cfg: CardPosConfig, parent: Node, prefab: Prefab): Node {
         const node = instantiate(prefab);
 
@@ -88,15 +154,27 @@ export class GameController extends Component {
             //写牌的属性
             view.cardFace = cfg.cardFace;
             view.cardSuit = cfg.cardSuit;
-            // ⭐ 绑定点击事件处理函数
-           // view.setClickHandler(this.onCardClicked.bind(this)); 
-            //console.log(`DEBUG: Card ${node.name} 绑定成功。`);
+            
         }
 
         return node;
     }
 
     
+    /*
+    通用卡牌创建函数
+    功能：
+    根据单张卡牌配置（CardPosConfig）实例化预制体；
+    将其挂载到指定父节点；
+    设置卡牌在场景中的初始位置与牌面属性。
+    @param cfg   单张卡牌的配置（牌面点数、花色、位置）
+    @param parent 该卡牌要挂载到的父节点（Playfield 或 Stack 区域）
+    @param prefab 用于实例化的卡牌预制体
+    @returns 创建完成的卡牌节点 Node
+     */
+
+
+
     private bindCardClicks(): void {
     const cards = this.node.getComponentsInChildren(CardView);
 
@@ -111,91 +189,15 @@ export class GameController extends Component {
         }
     }
     }
-
-    /*private onCardClicked(cardView: CardView): void {
-        console.log("DEBUG: onCardClicked 触发！");
-        const node = cardView.node;
-
-        // 1. 如果点击的是 Stack 区的牌，走 Stack 逻辑
-        if (this.stackArea && node.parent === this.stackArea) {
-            console.log("DEBUG: 进入 Stack 逻辑.");
-            this._handleStackCardClick(cardView);
-            return;
-        }
-
-        // 2. 其它（比如 Playfield）先沿用原来的逻辑
-        if (!this.gameView) {
-            return;
-        }
-        this.gameView.playReplaceTopCard(node);
-    }
-
-    // 私有：处理 Stack 区点击
-    private _handleStackCardClick(cardView: CardView): void {
-    if (!this.stackArea || !this.gameView) {
-        return;
-    }
-
-    // 交换过程中，直接忽略新的点击
-    if (this._isSwappingStack) {
-        return;
-    }
-
-    const clickedNode = cardView.node;
-
-    const stackChildren = this.stackArea.children;
-    const stackCardNodes: Node[] = [];
-    for (const child of stackChildren) {
-        if (child.getComponent(CardView)) {
-            stackCardNodes.push(child);
-        }
-    }
-    if (stackCardNodes.length === 0) {
-        return;
-    }
-
-    // 找 x 最大的 top 卡
-    let topNode = stackCardNodes[0];
-    let maxX = topNode.position.x;
-    for (const n of stackCardNodes) {
-        if (n.position.x > maxX) {
-            maxX = n.position.x;
-            topNode = n;
-        }
-    }
-
-    // 点击的是 top 就不换
-    if (clickedNode === topNode) {
-        return;
-    }
-
-    // 标记正在交换
-    this._isSwappingStack = true;
-
-    // 把“交换完毕”的回调传给 GameView
-    this.gameView.playSwapStackTop(clickedNode, topNode, () => {
-        this._isSwappingStack = false;
-     // 交换结束后重新排序层级
-    this._sortStackByX();
-    });
-    }
-    
-    //渲染层级的确定：
-
-    private _sortStackByX(): void {
-    if (!this.stackArea) return;
-
-    const nodes = this.stackArea.children.filter(n => n.getComponent(CardView));
-
-    // 按 x 升序排序（最小 → 最大）
-    nodes.sort((a, b) => a.position.x - b.position.x);
-
-    // 重新设置 siblingIndex，保证视觉层级正确
-    nodes.forEach((node, index) => {
-        node.setSiblingIndex(index);  // index 越大越上层
-    });
-}*/
-
+     /*
+    扫描场景中所有 CardView，并绑定点击回调
+    功能：
+    遍历当前 GameController 节点下所有子节点中的 CardView 组件；
+    判断其父节点属于 Stack 区或 Playfield 区；
+    将点击事件分别绑定到 StackController 或 PlayfieldController 的处理函数上。
+    使用场景：
+    在所有卡牌生成完毕之后调用（start 阶段），统一完成点击事件的分发绑定。
+     */   
 
 
 }

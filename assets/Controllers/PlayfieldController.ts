@@ -5,6 +5,22 @@ import { UndoService } from '../Services/UndoService';
 
 const { ccclass, property } = _decorator;
 
+/**
+PlayfieldController
+-------------------------
+功能：
+管理桌面区域（Playfield）卡牌的点击逻辑；
+根据规则判断桌面牌是否可以与手牌区顶部牌（Stack 顶部）进行匹配；
+在匹配成功时，调用 StackController 接收该牌，并通过 UndoService 记录可撤销操作。
+
+职责：
+只关心“桌面区域”的交互，不直接操作堆牌区内部细节；
+作为 GameController 分发点击事件后的业务处理入口。
+
+使用场景：
+GameController 在 bindCardClicks() 中，把 Playfield 区卡牌的点击回调指向 onPlayfieldCardClicked()；
+当玩家点击桌面上的牌时，由本控制器判断是否满足匹配规则，并执行相应动作。
+ */
 @ccclass('PlayfieldController')
 export class PlayfieldController extends Component {
 

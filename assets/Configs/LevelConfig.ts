@@ -1,5 +1,5 @@
 // assets/Configs/LevelConfig.ts
-
+//一个关卡配置文件（LevelConfig）
 export interface CardPosConfig {
     cardFace: number;
     cardSuit: number;
@@ -11,7 +11,7 @@ export interface LevelConfig {
     stack: CardPosConfig[];
 }
 
-// 关卡 1，完全照你给的 JSON 改成 ts 版
+//设定的card的实际点数和固定的位置以及花色，花色在游戏的逻辑里没有使用，先全部设成零
 export const kLevel1Config: LevelConfig = {
     playfield: [
         { cardFace: 2, cardSuit: 0, position: { x: 250, y: 1000 } },
