@@ -11,11 +11,9 @@ StackController
 管理「堆牌区（Stack）」的所有交互与视觉逻辑；
 处理堆牌区卡牌的点击（交换顶部牌）；
 接收来自桌面（Playfield）的匹配牌，并让其飞入 Stack 成为新的顶部牌。
-
 职责：
 只关注 Stack 区域内部的牌顺序、位置与层级；
 提供 getTopCardView / acceptMatchedFromPlayfield 供其他控制器调用。
-
 使用场景：
 由 GameController 在 bindCardClicks() 中将 Stack 区牌点击事件绑定到 onStackCardClicked()；
 由 PlayfieldController 在匹配成功后调用 acceptMatchedFromPlayfield()。
@@ -100,7 +98,6 @@ export class StackController extends Component {
     将桌面上的卡牌节点挂到 stackArea 下；
     保持原世界坐标不突变，然后通过 tween 动画将其移动到当前顶部牌右侧；
     动画结束后按 x 坐标重新确定渲染层级，让它成为视觉上的“最上方”一张牌。
-     cardView 从桌面区域移动过来的匹配牌
      */
     public acceptMatchedFromPlayfield(cardView: CardView): void {
         if (!this.stackArea || !this.gameView) return;
